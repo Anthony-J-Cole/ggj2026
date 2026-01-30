@@ -1,17 +1,20 @@
+use std::io::Write;
+
+use colored::Colorize;
 use crossterm::cursor;
 use rand::Rng;
-use colored::Colorize;
 
+mod Utils;
 mod story_manger;
 mod utils;
 
 fn main() {
     let mut sm = story_manger::setup_story();
-    let mut fails = 0; 
+    let mut fails = 0;
 
     while sm.story_progress < sm.story_lines.len() {
         //Begin the game
-        
+
         crossterm::style::SetBackgroundColor(crossterm::style::Color::Red);
 
         let mut rand = rand::rng();
@@ -29,17 +32,17 @@ fn main() {
         //Select a random bitmask operation
         if sm.story_progress < sm.story_lines.len() / 2 {
             mask = match rand.random_range(0..2) {
-                0 => utils::Masks::And,    
-                1 => utils::Masks::Xor,    
-                _ => utils::Masks::And,    
+                0 => utils::Masks::And,
+                1 => utils::Masks::Xor,
+                _ => utils::Masks::And,
             };
-        }
-        else { //Getting to the endgame
+        } else {
+            //Getting to the endgame
             mask = match rand.random_range(0..4) {
                 0 => utils::Masks::And,
                 1 => utils::Masks::Xor,
                 2 => utils::Masks::LeftShift,
-                _ => utils::Masks::RightShift,            
+                _ => utils::Masks::RightShift,
             };
         }
 
@@ -80,64 +83,72 @@ fn main() {
         //Print Storyline
         println!("{}", sm.story_lines[sm.story_progress].green().bold());
         sm.story_progress += 1;
-        
-      
 
         //Print the operation to do
         println!(
-            "Mask =\t{}\tMode =\t{}",
+            "Mask =\t{}\tInput Mode =\t{}",
             mask.print().bright_magenta(),
-            display_mode.to_string(),
+            input_mode.to_string(),
         );
 
+        //Display the target and starting numbers
         display_mode.print(target, starting);
 
-        //Display the target and starting numbers
-        
+        print!("{}", if matches!(input_mode ,utils::Mode::Binary) {"0b".purple()} else {"0x".bright_cyan()} );
+        std::io::stdout().flush().expect("Failed to flusg stdout");
+
         //Wait for user input
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).unwrap();
-        
-        //Clear the terminal
-        println!("{}", crossterm::terminal::Clear(crossterm::terminal::ClearType::All));
-        println!("{}", cursor::MoveTo(0, 0));
 
+        //Clear the terminal
+        println!(
+            "{}",
+            crossterm::terminal::Clear(crossterm::terminal::ClearType::All)
+        );
+        println!("{}", cursor::MoveTo(0, 0));
 
         //Validate user input
         let valid = input_mode.validate_input(&input);
-        if !valid{
+        if !valid {
+            fails += 1;
             continue;
         }
         let user_number = input_mode.parse_input(&input);
 
-
         //Apply the bitmask operation
         let result = mask.apply(starting, user_number);
 
-        let res_out =  
-        match display_mode {
-            utils::Mode::Binary => format!("{:b}",result),
-            utils::Mode::Hexadecimal => format!("{:x}", result)
+        let res_out = match display_mode {
+            utils::Mode::Binary => format!("{:b}", result),
+            utils::Mode::Hexadecimal => format!("{:x}", result),
         };
 
         //Check if the result matches the target
         if result == target {
             println!("{} You matched the target.", "Correct".green().bold());
         } else {
-            println!("{}. The result was {}.","Fail".red().bold(), res_out);
+            println!("{}. The your input was {}. :(", "Fail".red().bold(), res_out);
             fails += 1;
         }
     }
 
-    
-
-    let fail_string = format!("{}",fails);
-    println!("{}{}{}","You failed ".green(),if fails > 0 {fail_string.red()} else {fail_string.green()}," times".green())
+    let fail_string = format!("{}", fails);
+    println!(
+        "{}{}{}",
+        "You failed ".green(),
+        if fails > 0 {
+            fail_string.red()
+        } else {
+            fail_string.green()
+        },
+        " times".green()
+    )
 }
 
 /* Gameplan,
 you are a human forced to to menial labor in a world where AI has replaced everything -
 Your goal is to bitmask incoming numbers to match the expected output.
 
-Operations: AND, XOR, <<, >> NOT 
+Operations: AND, XOR, <<, >> NOT
 */
