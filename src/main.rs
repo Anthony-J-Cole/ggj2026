@@ -1,4 +1,3 @@
-use std::io::Read;
 use crossterm::{self, cursor};
 use rand::Rng;
 use colored::Colorize;
@@ -20,19 +19,19 @@ fn main() {
       ];
 
 
-    while true {
+    loop {
         crossterm::style::SetBackgroundColor(crossterm::style::Color::Red);
 
         let mut rand = rand::rng();
-        let mut first = rand.random_range(0..1024);
-        let mut second = rand.random_range(0..1024);
+        let first = rand.random_range(0..1024);
+        let second = rand.random_range(0..1024);
 
         //Create the target
         let mut target = if first < second { first } else { second };
-        let mut starting = if first < second { second } else { first };
+        let starting = if first < second { second } else { first };
 
         //Select a random bitmask operation
-        let mut mask = match rand.random_range(0..2) {
+        let mask = match rand.random_range(0..2) {
             0 => Masks::And,
             1 => Masks::Xor,
             _ => Masks::And,
@@ -41,7 +40,7 @@ fn main() {
 
         //Is it possible to reach the target from the starting number with the selected mask?
         let mut regen = false;
-        while(!regen) {
+        while !regen  {
             regen = true;
             match mask {
                 Masks::And => {
@@ -65,10 +64,10 @@ fn main() {
         let mut ee: EasterEggs = EasterEggs::None;
 
         //hehe
-        if (target == starting) {
+        if target == starting  {
             ee = EasterEggs::SameNumber
         };
-        if (target == 69 || starting == 69) {
+        if target == 69 || starting == 69  {
             ee = EasterEggs::SixtyNine
         };
 
@@ -87,7 +86,7 @@ fn main() {
         ee.handle();
 
         //If story progress is above half the length of story lines, start hex mode
-        if (story_progress < story_lines.len())
+        if story_progress < story_lines.len() 
         {
             print_aligned_binary(target, starting);
 
