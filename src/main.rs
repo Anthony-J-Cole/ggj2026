@@ -7,6 +7,7 @@ mod utils;
 
 fn main() {
     let mut sm = story_manger::setup_story();
+    let mut fails = 0; 
 
     while sm.story_progress < sm.story_lines.len() {
         //Begin the game
@@ -123,8 +124,14 @@ fn main() {
             println!("{} You matched the target.\n", "Correct".green().bold());
         } else {
             println!("{}. The result was {}.\n","Fail".red().bold(), res_out);
+            fails += 1;
         }
     }
+
+    
+
+    let fail_string = format!("{}",fails);
+    println!("{}{}{}","You failed ".green(),if fails > 0 {fail_string.red()} else {fail_string.green()}," times".green())
 }
 
 /* Gameplan,
