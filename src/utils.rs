@@ -160,10 +160,11 @@ impl Mode {
         }
     }
     pub fn validate_input(&self, input: &str) -> bool {
+        use colored::Colorize;
         match self {
             Mode::Binary => {
                 if !input.trim().chars().all(|c| c == '0' || c == '1') {
-                    println!("Silly human, that's not binary!");
+                    println!("{}","Silly human, that's not binary!".red());
                     return false;
                 }
                 return true;
@@ -171,7 +172,7 @@ impl Mode {
             Mode::Hexadecimal => 
             {
                 if !input.trim().chars().all(|c| c.is_digit(16)) {
-                    println!("Hexadecimal, human! Use 0-9 and A-F!");
+                    println!("{}","Hexadecimal, human! Use 0-9 and A-F!".red());
                     return false;
                 }
                 return true;

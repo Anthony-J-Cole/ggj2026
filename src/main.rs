@@ -98,6 +98,11 @@ fn main() {
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).unwrap();
         
+        //Clear the terminal
+        println!("{}", crossterm::terminal::Clear(crossterm::terminal::ClearType::All));
+        println!("{}", cursor::MoveTo(0, 0));
+
+
         //Validate user input
         let valid = input_mode.validate_input(&input);
         if !valid{
@@ -109,10 +114,6 @@ fn main() {
         //Apply the bitmask operation
         let result = mask.apply(starting, user_number);
 
-        //Clear the terminal
-        println!("{}", crossterm::terminal::Clear(crossterm::terminal::ClearType::All));
-        println!("{}", cursor::MoveTo(0, 0));
-
         let res_out =  
         match display_mode {
             utils::Mode::Binary => format!("{:b}",result),
@@ -121,9 +122,9 @@ fn main() {
 
         //Check if the result matches the target
         if result == target {
-            println!("{} You matched the target.\n", "Correct".green().bold());
+            println!("{} You matched the target.", "Correct".green().bold());
         } else {
-            println!("{}. The result was {}.\n","Fail".red().bold(), res_out);
+            println!("{}. The result was {}.","Fail".red().bold(), res_out);
             fails += 1;
         }
     }
