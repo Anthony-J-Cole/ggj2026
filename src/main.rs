@@ -1,6 +1,7 @@
 use std::io::Read;
 use crossterm::{self, cursor};
 use rand::Rng;
+use colored::Colorize;
 
 fn main() {
     let mut story_progress = 0;
@@ -71,17 +72,29 @@ fn main() {
             ee = EasterEggs::SixtyNine
         };
 
-        println!("{}", &story_lines[story_progress]);
+
+        println!("{}\n{}",story_progress, &story_lines[story_progress].green().bold());
         story_progress += 1;
 
         println!(
             "Mask   =\t{}",
             match mask {
-                Masks::And => "AND",
-                Masks::Xor => "XOR",
+                Masks::And => "AND".blue().bold(),
+                Masks::Xor => "XOR".blue().bold(),
             }
         );
-        print_aligned_binary(target, starting, ee);
+
+        ee.handle();
+
+        //If story progress is above half the length of story lines, start hex mode
+        if (story_progress < story_lines.len())
+        {
+            print_aligned_binary(target, starting);
+
+        }
+        else {
+            print_aligned_hex(target, starting);
+        }
         
         //Wait for user input
         let mut input = String::new();
@@ -100,23 +113,38 @@ fn main() {
 
         //Check if the result matches the target
         if result == target {
-            println!("Congratulations! You matched the target.\n");
+            println!("{} You matched the target.\n", "Correct".green().bold());
         } else {
-            println!("Fail. The result was {:x}.\n", result);
+            println!("{}. The result was {:x}.\n","Fail".red().bold(), result);
         }
     }
 }
 
-fn print_aligned_binary(a: u32, b: u32, ee: EasterEggs) {
+fn print_aligned_hex(a: u32, b: u32) {
+    let hex_a = format!("{:x}", a);
+    let hex_b = format!("{:x}", b);
+
+    let width = hex_a.len().max(hex_b.len());
+    let a_format = format!("{:0width$x}", a, width = width);
+    let b_format = format!("{:0width$x}", b, width = width);
+
+    println!("{} = Target Number", a_format.bright_yellow());
+    println!("--------------");
+    println!("{} = Starting Number", b_format.bright_blue());
+}
+
+fn print_aligned_binary(a: u32, b: u32) {
+    use colored::Colorize;
     let bin_a = format!("{:b}", a);
     let bin_b = format!("{:b}", b);
 
     let width = bin_a.len().max(bin_b.len());
+    let a_format =format!("{:0width$b}", a, width = width);
+    let b_format =format!("{:0width$b}", b, width = width);
 
-    ee.handle();
-
-    println!("{:0width$b} = Target Number", a, width = width);
-    println!("{:0width$b} = Starting Number", b, width = width);
+    println!("{} = Target Number", a_format.bright_yellow());
+    println!("--------------");
+    println!("{} = Starting Number", b_format.bright_blue());
 }
 
 enum Masks {
