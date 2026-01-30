@@ -1,4 +1,4 @@
-use crossterm::{self, cursor};
+use crossterm::cursor;
 use rand::Rng;
 use colored::Colorize;
 
@@ -19,7 +19,7 @@ fn main() {
       ];
 
 
-    loop {
+    while story_progress < story_lines.len() {
         crossterm::style::SetBackgroundColor(crossterm::style::Color::Red);
 
         let mut rand = rand::rng();
@@ -30,77 +30,63 @@ fn main() {
         let mut target = if first < second { first } else { second };
         let starting = if first < second { second } else { first };
 
-        //Select a random bitmask operation
-        let mask = match rand.random_range(0..2) {
-            0 => Masks::And,
-            1 => Masks::Xor,
-            _ => Masks::And,
-        };
+        //Set modes based on story progress
+        let (input_mode, display_mode) = get_modes(story_progress, story_lines.len());
 
+        let mask: Masks;
+        //Select a random bitmask operation
+        if story_progress < story_lines.len() / 2 {
+            mask = match rand.random_range(0..2) {
+                0 => Masks::And,    
+                1 => Masks::Xor,    
+                _ => Masks::And,    
+            };
+        }
+        else {
+            mask = match rand.random_range(0..4) {
+                0 => Masks::And,
+                1 => Masks::Xor,
+                2 => Masks::LeftShift,
+                _ => Masks::RightShift,            
+            };
+        }
 
         //Is it possible to reach the target from the starting number with the selected mask?
-        let mut regen = false;
-        while !regen  {
-            regen = true;
-            match mask {
-                Masks::And => {
-                    //For AND, the target must have all bits set that are set in the starting number
-                    if (target | starting) != starting {
-                    target = rand.random_range(0..1024);
-                    regen = false;
-                    }
-                }
-                Masks::Xor => {
-                //For XOR, the target must be less than or equal to twice the starting number
-                if target > (starting * 2) {
-                    target = rand.random_range(0..1024);
-                    regen = false;
-                }
-            }
+        while !mask.see_if_possible(target, starting) {
+            if matches!(mask, Masks::And | Masks::Xor) {
+                target = rand.random_range(0..1024);
+            } else {
+                target = starting << rand.random_range(0..5);
             }
         }
 
 
-        let mut ee: EasterEggs = EasterEggs::None;
+        let ee = EasterEggs::check_for_easter_eggs(target, starting);
+        ee.handle();
 
-        //hehe
-        if target == starting  {
-            ee = EasterEggs::SameNumber
-        };
-        if target == 69 || starting == 69  {
-            ee = EasterEggs::SixtyNine
-        };
+        if cfg!(debug_assertions) {
+            println!("{}", story_progress);
+        }
 
-
-        println!("{}\n{}",story_progress, &story_lines[story_progress].green().bold());
+        println!("{}", &story_lines[story_progress].green().bold());
         story_progress += 1;
 
         println!(
             "Mask   =\t{}",
-            match mask {
-                Masks::And => "AND".blue().bold(),
-                Masks::Xor => "XOR".blue().bold(),
-            }
+            mask.print().bright_magenta()
         );
 
         ee.handle();
 
-        //If story progress is above half the length of story lines, start hex mode
-        if story_progress < story_lines.len() 
-        {
-            print_aligned_binary(target, starting);
-
-        }
-        else {
-            print_aligned_hex(target, starting);
-        }
-        
+        display_mode.print(target, starting);
         //Wait for user input
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).unwrap();
 
-        //Convert the input from binary string to a number
-        let user_number = u32::from_str_radix(input.trim(), 2).unwrap();
+        //Validate user input
+        let user_number = input_mode.parse_input(&input);
+        input_mode.validate_input(&input);
+
 
         //Apply the bitmask operation
         let result = mask.apply(starting, user_number);
@@ -146,9 +132,28 @@ fn print_aligned_binary(a: u32, b: u32) {
     println!("{} = Starting Number", b_format.bright_blue());
 }
 
+fn print_rainbow(input: &str) {
+    let colors = [
+        |s: &str| s.red(),
+        |s: &str| s.yellow(),
+        |s: &str| s.green(),
+        |s: &str| s.cyan(),
+        |s: &str| s.blue(),
+        |s: &str| s.magenta(),
+    ];
+
+    for (i, ch) in input.chars().enumerate() {
+        let color = &colors[i % colors.len()];
+        print!("{}", color(&ch.to_string()));
+    }
+    println!();
+}
+
 enum Masks {
     And,
     Xor,
+    LeftShift,
+    RightShift,
 }
 
 impl Masks {
@@ -156,43 +161,157 @@ impl Masks {
         match self {
             Masks::And => target & user_num,
             Masks::Xor => target ^ user_num,
+            Masks::LeftShift => target << user_num,
+            Masks::RightShift => target >> user_num,
         }
     }
+    fn print(&self) -> &str {
+        match self {
+            Masks::And => "AND",
+            Masks::Xor => "XOR",
+            Masks::LeftShift => "LEFT SHIFT",
+            Masks::RightShift => "RIGHT SHIFT",
+        }
+    }
+    fn see_if_possible(&self, target: u32, starting: u32) -> bool {
+        match self {
+                Masks::And => {
+                    //For AND, the target must have all bits set that are set in the starting number
+                    if (target | starting) != starting {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+                Masks::Xor => {
+                    //For XOR, any target is possible
+                    return true;
+                }
+                Masks::LeftShift => 
+                {
+                    //For left shift the target must be the same as starting shifted left by some amount
+                    let mut shifted = starting;
+                    while shifted < target {
+                        shifted <<= 1;
+                        if shifted == target {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                Masks::RightShift => 
+                {
+                    //For right shift the target must be the same as starting shifted right by some amount
+                    let mut shifted = starting;
+                    while shifted > target {
+                        shifted >>= 1;
+                        if shifted == target {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
 }
+
+enum Mode {
+    Binary,
+    Hexadecimal,
+}
+
+impl Mode {
+    fn print(&self, a: u32, b: u32) {
+        match self {
+            Mode::Binary => print_aligned_binary(a, b),
+            Mode::Hexadecimal => print_aligned_hex(a, b),
+        }
+    }
+    fn parse_input(&self, input: &str) -> u32 {
+        match self {
+            Mode::Binary => u32::from_str_radix(input.trim(), 2).unwrap(),
+            Mode::Hexadecimal => u32::from_str_radix(input.trim(), 16).unwrap(),
+        }
+    }
+    fn validate_input(&self, input: &str) {
+        match self {
+            Mode::Binary => {
+                if !input.trim().chars().all(|c| c == '0' || c == '1') {
+                    println!("Silly human, that's not binary!");
+                }
+            }
+            Mode::Hexadecimal => 
+            {
+                if !input.trim().chars().all(|c| c.is_digit(16)) {
+                    println!("Hexadecimal, human! Use 0-9 and A-F!");
+                }
+            }
+            
+        }
+    }
+} 
+
 
 enum EasterEggs {
     None,
     SameNumber,
     SixtyNine,
+    FourTwenty,
+    FourtyTwo,
 }
 
 impl EasterEggs {
     fn handle(&self) {
         match self {
-            EasterEggs::None => {
-                println!("");
-            }
-            EasterEggs::SameNumber => {
-                println!("Wait that wasnt supposed to happen");
-            }
-            EasterEggs::SixtyNine => {
-                println!("Nice!");
-            }
+            EasterEggs::None => println!(""),
+            EasterEggs::SameNumber => print_rainbow("Wait that wasnt supposed to happen"),
+            EasterEggs::SixtyNine => print_rainbow("Nice!"),
+            EasterEggs::FourTwenty => println!("{}", "Blaze it!".green().bold()),
+            EasterEggs::FourtyTwo => println!("{}", "The answer to life, the universe, and everything.".green().bold()),
         }
     }
+
+    fn check_for_easter_eggs(target: u32, starting: u32) -> EasterEggs {
+        if target == starting {
+            return EasterEggs::SameNumber;
+        }
+        if target == 69 || starting == 69 {
+            return EasterEggs::SixtyNine;
+        }
+        if target == 420 || starting == 420 {
+            return EasterEggs::FourTwenty;
+        }
+        if target == 42 || starting == 42 {
+            return EasterEggs::FourtyTwo;
+        }
+        return EasterEggs::None;
+    }
+}
+
+
+fn get_modes(story_progress: usize, len : usize) -> (Mode, Mode)
+{
+    let input_mode = if story_progress < len / 2 {
+            Mode::Binary
+        } else {
+            let rn = rand::random_range(0..2);
+            if rn == 0 {
+                Mode::Binary
+            } else {
+                Mode::Hexadecimal
+            }
+        };
+        let display_mode = if story_progress < len / 2 {
+            Mode::Binary
+        } else {
+            Mode::Hexadecimal
+        };
+    return (input_mode, display_mode);
 }
 
 /* Gameplan,
 you are a human forced to to menial labor in a world where AI has replaced everything -
 Your goal is to bitmask incoming numbers to match the expected output.
 
-Operation:
-
-
-
-
-
-
-
-
+Operations: AND, XOR, <<, >> NOT 
 */
