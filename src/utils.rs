@@ -1,29 +1,5 @@
 use colored::ColoredString;
 
-pub fn get_modes(story_progress: usize, len: usize) -> (Mode, Mode) {
-    let input_mode = if story_progress < len / 2 {
-        Mode::Binary
-    } else {
-        let rn = rand::random_range(0..2);
-        if rn == 0 {
-            Mode::Binary
-        } else {
-            Mode::Hexadecimal
-        }
-    };
-    let display_mode = if story_progress < len / 2 {
-        Mode::Binary
-    } else {
-        let rn = rand::random_range(0..2);
-        if rn == 0 {
-            Mode::Binary
-        } else {
-            Mode::Hexadecimal
-        }
-    };
-    return (input_mode, display_mode);
-}
-
 pub fn print_aligned_hex(a: u32, b: u32) {
     use colored::Colorize;
     let hex_a = format!("{:x}", a);
@@ -179,6 +155,29 @@ impl Mode {
             }
         }
     }
+    pub fn get_modes(story_progress: usize, len: usize) -> (Mode, Mode) {
+    let input_mode = if story_progress < len / 2 {
+        Mode::Binary
+    } else {
+        let rn = rand::random_range(0..2);
+        if rn == 0 {
+            Mode::Binary
+        } else {
+            Mode::Hexadecimal
+        }
+    };
+    let display_mode = if story_progress < len / 2 {
+        Mode::Binary
+    } else {
+        let rn = rand::random_range(0..2);
+        if rn == 0 {
+            Mode::Binary
+        } else {
+            Mode::Hexadecimal
+        }
+    };
+    return (input_mode, display_mode);
+}
 }
 
 pub enum EasterEggs {

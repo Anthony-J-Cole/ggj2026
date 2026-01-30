@@ -26,7 +26,7 @@ fn main() {
         let starting = if first < second { second } else { first };
 
         //Set modes based on story progress
-        let (input_mode, display_mode) = utils::get_modes(sm.story_progress, sm.story_lines.len());
+        let (input_mode, display_mode) = utils::Mode::get_modes(sm.story_progress, sm.story_lines.len());
 
         let mask: utils::Masks;
         //Select a random bitmask operation
@@ -38,7 +38,7 @@ fn main() {
             };
         } else {
             //Getting to the endgame
-            mask = match rand.random_range(0..4) {
+            mask = match rand.random_range(0..3) {
                 0 => utils::Masks::And,
                 1 => utils::Masks::Xor,
                 2 => utils::Masks::LeftShift,
