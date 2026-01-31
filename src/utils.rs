@@ -1,4 +1,3 @@
-use colored::ColoredString;
 
 pub fn print_aligned_hex(a: u32, b: u32) {
     use colored::Colorize;

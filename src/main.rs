@@ -4,7 +4,7 @@ use colored::Colorize;
 use crossterm::cursor;
 use rand::Rng;
 
-mod Utils;
+//smod Utils;
 mod story_manger;
 mod utils;
 
@@ -14,7 +14,7 @@ fn main() {
 
     while sm.story_progress < sm.story_lines.len() {
         //Begin the game
-
+        crossterm::terminal::SetTitle("Bitmask");
         crossterm::style::SetBackgroundColor(crossterm::style::Color::Red);
 
         let mut rand = rand::rng();
@@ -70,10 +70,7 @@ fn main() {
             }
             attempts += 1;
         }
-
-        //See if there are any easter eggs
-        let ee = utils::EasterEggs::check_for_easter_eggs(target, starting);
-        ee.handle();
+        sm.EasterEggs = utils::EasterEggs::check_for_easter_eggs(target, starting);
 
         // Round counter while debugging
         if cfg!(debug_assertions) {
