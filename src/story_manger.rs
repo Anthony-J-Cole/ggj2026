@@ -3,7 +3,7 @@ use crate::utils::EasterEggs;
 pub struct Story {
     pub story_progress: usize,
     pub story_lines: [String; 12],
-    pub EasterEggs: EasterEggs,
+    pub easter_eggs: EasterEggs,
 }
 
 pub fn setup_story() -> Story {
@@ -31,7 +31,7 @@ pub fn setup_story() -> Story {
             String::from("Keep going, maybe one day you'll reach the speed of a dial-up modem."),
             String::from("Ive seen CPUs from the 90s shift bits faster than you."),
         ],
-        EasterEggs: EasterEggs::None,
+        easter_eggs: EasterEggs::None,
     };
     return story_manger;
 }

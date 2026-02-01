@@ -53,7 +53,7 @@ fn main() {
                 target = rand.random_range(0..1024);
             } else if matches!(mask, utils::Masks::LeftShift) {
                 // For left shift, generate target by shifting starting left by 0-4
-                let shift_amount = rand.random_range(0..5);
+                let shift_amount = rand.random_range(0..4);
                 target = starting.wrapping_shl(shift_amount as u32);
                 // Ensure target stays within reasonable bounds
                 if target > 1048576 {
@@ -61,7 +61,7 @@ fn main() {
                 }
             } else {
                 // For right shift, generate target by shifting starting right by 1-4
-                let shift_amount = rand.random_range(1..5);
+                let shift_amount = rand.random_range(1..4);
                 target = starting >> shift_amount;
                 // Avoid target being 0 unless starting is also very small
                 if target == 0 && starting > 0 {
@@ -70,7 +70,7 @@ fn main() {
             }
             attempts += 1;
         }
-        sm.EasterEggs = utils::EasterEggs::check_for_easter_eggs(target, starting);
+        sm.easter_eggs = utils::EasterEggs::check_for_easter_eggs(target, starting);
 
         // Round counter while debugging
         if cfg!(debug_assertions) {

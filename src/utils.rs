@@ -1,4 +1,3 @@
-
 pub fn print_aligned_hex(a: u32, b: u32) {
     use colored::Colorize;
     let hex_a = format!("{:x}", a);
@@ -8,9 +7,17 @@ pub fn print_aligned_hex(a: u32, b: u32) {
     let a_format = format!("{:0width$x}", a, width = width);
     let b_format = format!("{:0width$x}", b, width = width);
 
-    println!("{}{} = Target Number", "0x".bright_cyan(), a_format.bright_yellow());
+    println!(
+        "{}{} = Target Number",
+        "0x".bright_cyan(),
+        a_format.bright_yellow()
+    );
     println!("--------------");
-    println!("{}{} = Starting Number", "0x".bright_cyan(), b_format.bright_blue());
+    println!(
+        "{}{} = Starting Number",
+        "0x".bright_cyan(),
+        b_format.bright_blue()
+    );
 }
 
 pub fn print_aligned_binary(a: u32, b: u32) {
@@ -22,27 +29,17 @@ pub fn print_aligned_binary(a: u32, b: u32) {
     let a_format = format!("{:0width$b}", a, width = width);
     let b_format = format!("{:0width$b}", b, width = width);
 
-    println!("{}{} = Target Number", "0b".purple(), a_format.bright_yellow());
+    println!(
+        "{}{} = Target Number",
+        "0b".purple(),
+        a_format.bright_yellow()
+    );
     println!("--------------");
-    println!("{}{} = Starting Number", "0b".purple(), b_format.bright_blue());
-}
-
-pub fn print_rainbow(input: &str) {
-    use colored::Colorize;
-    let colors = [
-        |s: &str| s.red(),
-        |s: &str| s.yellow(),
-        |s: &str| s.green(),
-        |s: &str| s.cyan(),
-        |s: &str| s.blue(),
-        |s: &str| s.magenta(),
-    ];
-
-    for (i, ch) in input.chars().enumerate() {
-        let color = &colors[i % colors.len()];
-        print!("{}", color(&ch.to_string()));
-    }
-    println!();
+    println!(
+        "{}{} = Starting Number",
+        "0b".purple(),
+        b_format.bright_blue()
+    );
 }
 
 pub enum Masks {
@@ -155,28 +152,28 @@ impl Mode {
         }
     }
     pub fn get_modes(story_progress: usize, len: usize) -> (Mode, Mode) {
-    let input_mode = if story_progress < len / 2 {
-        Mode::Binary
-    } else {
-        let rn = rand::random_range(0..2);
-        if rn == 0 {
+        let input_mode = if story_progress < len / 2 {
             Mode::Binary
         } else {
-            Mode::Hexadecimal
-        }
-    };
-    let display_mode = if story_progress < len / 2 {
-        Mode::Binary
-    } else {
-        let rn = rand::random_range(0..2);
-        if rn == 0 {
+            let rn = rand::random_range(0..2);
+            if rn == 0 {
+                Mode::Binary
+            } else {
+                Mode::Hexadecimal
+            }
+        };
+        let display_mode = if story_progress < len / 2 {
             Mode::Binary
         } else {
-            Mode::Hexadecimal
-        }
-    };
-    return (input_mode, display_mode);
-}
+            let rn = rand::random_range(0..2);
+            if rn == 0 {
+                Mode::Binary
+            } else {
+                Mode::Hexadecimal
+            }
+        };
+        return (input_mode, display_mode);
+    }
 }
 
 pub enum EasterEggs {
@@ -190,6 +187,22 @@ pub enum EasterEggs {
 impl EasterEggs {
     pub fn handle(&self) {
         use colored::Colorize;
+        fn print_rainbow(input: &str) {
+            let colors = [
+                |s: &str| s.red(),
+                |s: &str| s.yellow(),
+                |s: &str| s.green(),
+                |s: &str| s.cyan(),
+                |s: &str| s.blue(),
+                |s: &str| s.magenta(),
+            ];
+
+            for (i, ch) in input.chars().enumerate() {
+                let color = &colors[i % colors.len()];
+                print!("{}", color(&ch.to_string()));
+            }
+        }
+        println!();
         match self {
             EasterEggs::None => println!(""),
             EasterEggs::SameNumber => print_rainbow("Wait that wasnt supposed to happen"),
